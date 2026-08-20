@@ -1,14 +1,14 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from app.db.database import Base, engine
-from app.models.user import User
-from app.models.research_project import ResearchProject, ResearchMember
-from app.models.research_task import ResearchTask
-
-Base.metadata.create_all(bind=engine)
+from app.routers import users
+from app.routers import research_project, research_task
 
 app = FastAPI()
+
+app.include_router(users.router)
+app.include_router(research_task.router)
+app.include_router(research_project.router)
 
 
 @app.get("/")
@@ -17,12 +17,22 @@ def test():
         "message": "Server đang hoạt động"
     }
 
+
+@app.get("/health")
+def health_check():
+    return {
+        "success": True,
+        "message": "Server đang hoạt động"
+    }
+
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            "code": exc.status_code,
+            "success": False,
+            "status_code": exc.status_code,
             "message": exc.detail
         }
     )
