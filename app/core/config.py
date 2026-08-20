@@ -1,10 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    APP_NAME: str = 'RESEARCH GROUP MANAGEMENT API'
-    APP_VERSION: str = '1.2.0'
-    APP_DESCRIPTION: str = 'RESEARCH MANAGEMENT'
-
     DATABASE_URL: str
 
     SECRET_KEY: str
