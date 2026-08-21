@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import UserResponse
-from app.core.dependencies import get_current_user, admin_required
-
+from app.core.security import (
+    get_current_user,
+    get_current_admin
+)
 
 router = APIRouter(
     prefix="/users",
@@ -22,10 +24,10 @@ def get_me(
 
 @router.get("", response_model=list[UserResponse])
 def get_users(
-    search: str = Query(None),
-    is_active: bool = Query(None),
-    current_user: User = Depends(admin_required),
-    db: Session = Depends(get_db)
+    search: str = None,
+    is_active: bool = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
 ):
     query = db.query(User)
 
@@ -36,6 +38,8 @@ def get_users(
         )
 
     if is_active is not None:
-        query = query.filter(User.is_active == is_active)
+        query = query.filter(
+            User.is_active == is_active
+        )
 
     return query.all()

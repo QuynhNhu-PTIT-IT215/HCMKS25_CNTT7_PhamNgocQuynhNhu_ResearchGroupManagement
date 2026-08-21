@@ -1,14 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from jose import jwt
-from datetime import datetime, timedelta, timezone
 
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse
-from app.core.config import settings
-
+from app.core.security import (
+    verify_password,
+    create_access_token
+)
 
 router = APIRouter(
     prefix="/auth",
@@ -22,9 +23,13 @@ pwd_context = CryptContext(
 
 
 @router.post("/register", response_model=UserResponse)
-def register(user: UserCreate, db: Session = Depends(get_db)):
-
-    existing_user = db.query(User).filter(User.email == user.email).first()
+def register(
+    user: UserCreate,
+    db: Session = Depends(get_db)
+):
+    existing_user = db.query(User).filter(
+        User.email == user.email
+    ).first()
 
     if existing_user:
         raise HTTPException(
@@ -49,12 +54,12 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(
-    email: str,
-    password: str,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(
+        User.email == form_data.username
+    ).first()
 
     if not user:
         raise HTTPException(
@@ -62,7 +67,10 @@ def login(
             detail="Email hoặc mật khẩu không đúng"
         )
 
-    if not pwd_context.verify(password, user.password_hash):
+    if not verify_password(
+        form_data.password,
+        user.password_hash
+    ):
         raise HTTPException(
             status_code=401,
             detail="Email hoặc mật khẩu không đúng"
@@ -71,25 +79,12 @@ def login(
     if not user.is_active:
         raise HTTPException(
             status_code=403,
-            detail="Tài khoản đã bị khóa"
+            detail="Tài khoản không hoạt động"
         )
 
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-    )
-
-    payload = {
-        "sub": str(user.id),
-        "email": user.email,
-        "role": user.role,
-        "exp": expire
-    }
-
-    access_token = jwt.encode(
-        payload,
-        settings.SECRET_KEY,
-        algorithm=settings.ALGORITHM
-    )
+    access_token = create_access_token({
+        "sub": str(user.id)
+    })
 
     return {
         "access_token": access_token,
