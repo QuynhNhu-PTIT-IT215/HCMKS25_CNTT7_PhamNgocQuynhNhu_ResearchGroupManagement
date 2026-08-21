@@ -53,6 +53,7 @@ def login(
     password: str,
     db: Session = Depends(get_db)
 ):
+
     user = db.query(User).filter(User.email == email).first()
 
     if not user:

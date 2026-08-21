@@ -5,6 +5,13 @@ from app.routers import users
 from app.routers import research_project, research_task
 from app.routers import auth
 
+from app.models.user import User
+from app.models.research_project import ResearchProject, ResearchMember
+from app.models.research_task import ResearchTask
+
+from app.db.database import Base, engine
+
+Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 app.include_router(users.router)
