@@ -30,6 +30,14 @@ def get_current_user(
                 detail="Token không hợp lệ"
             )
 
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            raise HTTPException(
+                status_code=401,
+                detail="Token không hợp lệ"
+            )
+
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=401,
@@ -43,7 +51,7 @@ def get_current_user(
         )
 
     user = db.query(User).filter(
-        User.id == int(user_id)
+        User.id == user_id
     ).first()
 
     if user is None:
