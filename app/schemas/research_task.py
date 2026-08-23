@@ -1,0 +1,32 @@
+from pydantic import BaseModel, ConfigDict
+from datetime import datetime
+
+
+class ResearchTaskBase(BaseModel):
+    project_id: int
+    title: str
+    description: str
+    assignee_id: int
+    status: str
+    priority: str
+    due_date: datetime
+
+
+class ResearchTaskCreate(ResearchTaskBase):
+    pass
+
+
+class ResearchTaskUpdate(BaseModel):
+    title: str
+    description: str
+    assignee_id: int
+    status: str
+    priority: str
+    due_date: datetime
+
+
+class ResearchTaskResponse(ResearchTaskBase):
+    id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
