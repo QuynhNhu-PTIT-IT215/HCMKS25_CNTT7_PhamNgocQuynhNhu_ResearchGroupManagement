@@ -309,6 +309,17 @@ def delete_research_member(
             detail="Không thể xóa OWNER"
         )
 
+    owner_count = db.query(ResearchMember).filter(
+        ResearchMember.project_id == project_id,
+        ResearchMember.role == "Owner"
+    ).count()
+
+    if member.role == "Owner" and owner_count <= 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Không thể xóa OWNER cuối cùng"
+        )
+
     db.delete(member)
 
     history = History(
