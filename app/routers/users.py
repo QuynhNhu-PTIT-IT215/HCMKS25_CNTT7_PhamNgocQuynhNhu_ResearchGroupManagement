@@ -29,8 +29,4 @@ def get_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(admin_required)
 ):
-    return get_all_users(
-        db,
-        search,
-        is_active
-    )
+    return get_all_users(db,search,is_active)
