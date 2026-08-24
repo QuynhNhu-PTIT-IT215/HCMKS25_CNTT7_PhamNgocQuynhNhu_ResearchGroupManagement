@@ -24,8 +24,8 @@ def get_me(
 
 @router.get("", response_model=list[UserResponse])
 def get_users(
-    search: str | None = None,
-    is_active: bool | None = None,
+    search: str,
+    is_active: bool,
     db: Session = Depends(get_db),
     current_user: User = Depends(admin_required)
 ):
