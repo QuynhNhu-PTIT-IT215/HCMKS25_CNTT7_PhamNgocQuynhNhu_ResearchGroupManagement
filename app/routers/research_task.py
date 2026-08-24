@@ -1,28 +1,16 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
-
-router = APIRouter(
-    prefix="",
-    tags=["Research Task"]
+from app.services.research_task import (
+    get_research_task_by_id
 )
 
 
-@router.get("/research-tasks/{task_id}")
-def get_research_task(task_id: int):
+router = APIRouter(
+    prefix="/research-tasks",
+    tags=["Research Tasks"]
+)
 
-    if task_id <= 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Mã công việc không hợp lệ"
-        )
 
-    if task_id == 403:
-        raise HTTPException(
-            status_code=403,
-            detail="Bạn không có quyền truy cập công việc này"
-        )
-
-    raise HTTPException(
-        status_code=404,
-        detail="Không tìm thấy công việc"
-    )
+@router.get("/{task_id}")
+def get_task(task_id: int):
+    return get_research_task_by_id(task_id)

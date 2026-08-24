@@ -24,14 +24,6 @@ app.include_router(research_task.router)
 app.include_router(research_project.router)
 app.include_router(auth.router)
 
-
-@app.get("/")
-def test():
-    return {
-        "message": "Server đang hoạt động"
-    }
-
-
 @app.get("/health")
 def health_check():
     return {
