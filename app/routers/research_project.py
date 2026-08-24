@@ -12,7 +12,8 @@ from app.schemas.research_project import (
     ResearchProjectCreate,
     ResearchProjectResponse,
     ResearchProjectUpdate,
-    ResearchMemberCreate
+    ResearchMemberCreate,
+    ResearchMemberResponse
 )
 
 from app.schemas.research_task import (
@@ -26,7 +27,9 @@ from app.services.research_project import (
     get_research_project_by_id,
     update_research_project,
     delete_research_project,
-    add_research_member
+    add_research_member,
+    delete_research_member,
+    get_research_project_members
 )
 
 from app.services.research_task import (
@@ -110,6 +113,52 @@ def delete_project(
     db: Session = Depends(get_db)
 ):
     return delete_research_project(
+        db,
+        project_id,
+        current_user.id
+    )
+
+
+@router.post("/{project_id}/members")
+def add_member(
+    project_id: int,
+    member: ResearchMemberCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return add_research_member(
+        db,
+        project_id,
+        current_user.id,
+        member.user_id
+    )
+
+
+@router.delete("/{project_id}/members/{user_id}")
+def delete_member(
+    project_id: int,
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return delete_research_member(
+        db,
+        project_id,
+        current_user.id,
+        user_id
+    )
+
+
+@router.get(
+    "/{project_id}/members",
+    response_model=list[ResearchMemberResponse]
+)
+def get_members(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return get_research_project_members(
         db,
         project_id,
         current_user.id

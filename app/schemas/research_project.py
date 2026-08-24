@@ -1,9 +1,9 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 
 
 class ResearchProjectBase(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=255)
     description: str
 
 
@@ -12,7 +12,7 @@ class ResearchProjectCreate(ResearchProjectBase):
 
 
 class ResearchProjectUpdate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=255)
     description: str
 
 
@@ -30,8 +30,8 @@ class ResearchMemberBase(BaseModel):
     role: str
 
 
-class ResearchMemberCreate(ResearchMemberBase):
-    pass
+class ResearchMemberCreate(BaseModel):
+    user_id: int
 
 
 class ResearchMemberUpdate(BaseModel):
@@ -40,5 +40,5 @@ class ResearchMemberUpdate(BaseModel):
 
 class ResearchMemberResponse(ResearchMemberBase):
     joined_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)

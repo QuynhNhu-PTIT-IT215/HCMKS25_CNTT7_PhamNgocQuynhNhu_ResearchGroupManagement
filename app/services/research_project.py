@@ -1,8 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.models.research_project import ResearchProject, ResearchMember
 from app.models.user import User
+from app.models.research_project import ResearchProject, ResearchMember
+from app.models.history import History
 
 
 def create_research_project(
@@ -11,6 +12,24 @@ def create_research_project(
     name: str,
     description: str
 ):
+    user = db.query(User).filter(
+        User.id == user_id
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy người dùng"
+        )
+
+    name = name.strip()
+
+    if not name:
+        raise HTTPException(
+            status_code=400,
+            detail="Tên đề tài không được để trống"
+        )
+
     project = ResearchProject(
         name=name,
         description=description,
@@ -28,8 +47,15 @@ def create_research_project(
     )
 
     db.add(member)
+
+    history = History(
+        user_id=user_id,
+        action="CREATE_PROJECT",
+        project_id=project.id
+    )
+
+    db.add(history)
     db.commit()
-    db.refresh(member)
 
     return project
 
@@ -39,6 +65,16 @@ def get_research_projects(
     user_id: int,
     search: str
 ):
+    user = db.query(User).filter(
+        User.id == user_id
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy người dùng"
+        )
+
     query = db.query(ResearchProject).join(
         ResearchMember,
         ResearchMember.project_id == ResearchProject.id
@@ -112,9 +148,24 @@ def update_research_project(
             detail="Chỉ OWNER mới có quyền sửa đề tài"
         )
 
+    name = name.strip()
+
+    if not name:
+        raise HTTPException(
+            status_code=400,
+            detail="Tên đề tài không được để trống"
+        )
+
     project.name = name
     project.description = description
 
+    history = History(
+        user_id=user_id,
+        action="UPDATE_PROJECT",
+        project_id=project_id
+    )
+
+    db.add(history)
     db.commit()
     db.refresh(project)
 
@@ -152,6 +203,7 @@ def delete_research_project(
     return {
         "message": "Xóa đề tài thành công"
     }
+
 
 def add_research_member(
     db: Session,
@@ -203,7 +255,105 @@ def add_research_member(
     )
 
     db.add(new_member)
+
+    history = History(
+        user_id=owner_id,
+        action="ADD_MEMBER",
+        project_id=project_id,
+        target_user_id=user_id
+    )
+
+    db.add(history)
     db.commit()
     db.refresh(new_member)
 
     return new_member
+
+
+def delete_research_member(
+    db: Session,
+    project_id: int,
+    owner_id: int,
+    user_id: int
+):
+    project = db.query(ResearchProject).filter(
+        ResearchProject.id == project_id
+    ).first()
+
+    if not project:
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy đề tài"
+        )
+
+    if project.owner_id != owner_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Chỉ OWNER mới có quyền xóa thành viên"
+        )
+
+    member = db.query(ResearchMember).filter(
+        ResearchMember.project_id == project_id,
+        ResearchMember.user_id == user_id
+    ).first()
+
+    if not member:
+        raise HTTPException(
+            status_code=404,
+            detail="Người dùng không phải thành viên của đề tài"
+        )
+
+    if member.role == "Owner":
+        raise HTTPException(
+            status_code=400,
+            detail="Không thể xóa OWNER"
+        )
+
+    db.delete(member)
+
+    history = History(
+        user_id=owner_id,
+        action="DELETE_MEMBER",
+        project_id=project_id,
+        target_user_id=user_id
+    )
+
+    db.add(history)
+    db.commit()
+
+    return {
+        "message": "Xóa thành viên thành công"
+    }
+
+
+def get_research_project_members(
+    db: Session,
+    project_id: int,
+    user_id: int
+):
+    project = db.query(ResearchProject).filter(
+        ResearchProject.id == project_id
+    ).first()
+
+    if not project:
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy đề tài"
+        )
+
+    member = db.query(ResearchMember).filter(
+        ResearchMember.project_id == project_id,
+        ResearchMember.user_id == user_id
+    ).first()
+
+    if not member:
+        raise HTTPException(
+            status_code=403,
+            detail="Bạn không có quyền xem thành viên của đề tài"
+        )
+
+    members = db.query(ResearchMember).filter(
+        ResearchMember.project_id == project_id
+    ).all()
+
+    return members
