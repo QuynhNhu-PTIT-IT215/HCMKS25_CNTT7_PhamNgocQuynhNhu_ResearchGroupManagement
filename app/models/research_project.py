@@ -19,7 +19,7 @@ class ResearchProject(Base):
 class ResearchMember(Base):
     __tablename__ = 'research_members'
 
-    project_id = Column(ForeignKey('research_projects.id'), primary_key=True, unique=True)
+    project_id = Column(ForeignKey('research_projects.id'), primary_key=True)
     user_id = Column(ForeignKey('users.id'), nullable=False, primary_key=True)
     role = Column(Enum('Owner', 'Member'), nullable=False)
     joined_at = Column(DateTime, default= datetime.now(timezone.utc))
