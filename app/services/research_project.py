@@ -6,15 +6,8 @@ from app.models.research_project import ResearchProject, ResearchMember
 from app.models.history import History
 
 
-def create_research_project(
-    db: Session,
-    user_id: int,
-    name: str,
-    description: str
-):
-    user = db.query(User).filter(
-        User.id == user_id
-    ).first()
+def create_research_project(db: Session,user_id: int,name: str,description: str):
+    user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(
@@ -47,6 +40,7 @@ def create_research_project(
     )
 
     db.add(member)
+    db.commit()
 
     history = History(
         user_id=user_id,
@@ -60,14 +54,8 @@ def create_research_project(
     return project
 
 
-def get_research_projects(
-    db: Session,
-    user_id: int,
-    search: str
-):
-    user = db.query(User).filter(
-        User.id == user_id
-    ).first()
+def get_research_projects(db: Session,user_id: int,search: str):
+    user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(
@@ -75,35 +63,24 @@ def get_research_projects(
             detail="Không tìm thấy người dùng"
         )
 
-    query = db.query(ResearchProject).join(
-        ResearchMember,
-        ResearchMember.project_id == ResearchProject.id
-    ).filter(
+    query = db.query(ResearchProject).join(ResearchMember,ResearchMember.project_id == ResearchProject.id).filter(
         ResearchMember.user_id == user_id
-    )
+        )
 
     if search:
-        query = query.filter(
-            ResearchProject.name.ilike(f"%{search}%")
-        )
+        query = query.filter(ResearchProject.name.ilike(f"%{search}%"))
 
     return query.all()
 
 
-def get_research_project_by_id(
-    db: Session,
-    project_id: int,
-    user_id: int
-):
+def get_research_project_by_id(db: Session,project_id: int,user_id: int):
     if project_id <= 0:
         raise HTTPException(
             status_code=400,
             detail="ID đề tài không hợp lệ"
         )
 
-    project = db.query(ResearchProject).filter(
-        ResearchProject.id == project_id
-    ).first()
+    project = db.query(ResearchProject).filter(ResearchProject.id == project_id).first()
 
     if not project:
         raise HTTPException(
@@ -111,10 +88,7 @@ def get_research_project_by_id(
             detail="Không tìm thấy đề tài"
         )
 
-    member = db.query(ResearchMember).filter(
-        ResearchMember.project_id == project_id,
-        ResearchMember.user_id == user_id
-    ).first()
+    member = db.query(ResearchMember).filter(ResearchMember.project_id == project_id,ResearchMember.user_id == user_id).first()
 
     if not member:
         raise HTTPException(
@@ -125,16 +99,8 @@ def get_research_project_by_id(
     return project
 
 
-def update_research_project(
-    db: Session,
-    project_id: int,
-    user_id: int,
-    name: str,
-    description: str
-):
-    project = db.query(ResearchProject).filter(
-        ResearchProject.id == project_id
-    ).first()
+def update_research_project(db: Session,project_id: int,user_id: int,name: str,description: str):
+    project = db.query(ResearchProject).filter(ResearchProject.id == project_id).first()
 
     if not project:
         raise HTTPException(
@@ -149,7 +115,6 @@ def update_research_project(
         )
 
     name = name.strip()
-
     if not name:
         raise HTTPException(
             status_code=400,
@@ -172,14 +137,8 @@ def update_research_project(
     return project
 
 
-def delete_research_project(
-    db: Session,
-    project_id: int,
-    user_id: int
-):
-    project = db.query(ResearchProject).filter(
-        ResearchProject.id == project_id
-    ).first()
+def delete_research_project(db: Session,project_id: int,user_id: int):
+    project = db.query(ResearchProject).filter(ResearchProject.id == project_id).first()
 
     if not project:
         raise HTTPException(
@@ -193,9 +152,7 @@ def delete_research_project(
             detail="Chỉ OWNER mới có quyền xóa đề tài"
         )
 
-    db.query(ResearchMember).filter(
-        ResearchMember.project_id == project_id
-    ).delete()
+    db.query(ResearchMember).filter(ResearchMember.project_id == project_id).delete()
 
     db.delete(project)
     db.commit()
@@ -205,15 +162,8 @@ def delete_research_project(
     }
 
 
-def add_research_member(
-    db: Session,
-    project_id: int,
-    owner_id: int,
-    user_id: int
-):
-    project = db.query(ResearchProject).filter(
-        ResearchProject.id == project_id
-    ).first()
+def add_research_member(db: Session,project_id: int,owner_id: int,user_id: int):
+    project = db.query(ResearchProject).filter(ResearchProject.id == project_id).first()
 
     if not project:
         raise HTTPException(
@@ -227,9 +177,7 @@ def add_research_member(
             detail="Chỉ OWNER mới có quyền thêm thành viên"
         )
 
-    user = db.query(User).filter(
-        User.id == user_id
-    ).first()
+    user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(
