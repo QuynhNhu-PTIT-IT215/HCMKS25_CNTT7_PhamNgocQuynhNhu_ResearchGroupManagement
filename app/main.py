@@ -32,7 +32,10 @@ def health_check():
         "message": "Server đang hoạt động"
     }
 
-
+#xem lại cái này
+# Để lỗi bung ra đúng với cá trường trong def http_exception_handler() thì 
+# khi: raise HTTPException(...) thì nó sẽ chạy cái hàm def đó.
+# Nên bên raise chỉ cần thay đổi status_code và detail.
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request,exc: HTTPException):
     return JSONResponse(

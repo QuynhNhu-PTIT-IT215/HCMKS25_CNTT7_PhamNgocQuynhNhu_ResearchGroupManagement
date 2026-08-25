@@ -109,7 +109,7 @@ def update_project(
 @router.delete("/{project_id}")
 def delete_project(
     project_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user), #Lấy ra thông tin của user đang đăng nhập
     db: Session = Depends(get_db)
 ):
     return delete_research_project(
