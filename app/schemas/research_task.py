@@ -20,12 +20,12 @@ class ResearchTaskCreate(BaseModel):
 
 
 class ResearchTaskUpdate(BaseModel):
-    title: str
-    description: str 
-    assignee_id: int 
-    status: str 
-    priority: str 
-    due_date: datetime 
+    title: str | None = None
+    description: str | None = None
+    assignee_id: int | None = None
+    status: str | None = None
+    priority: str | None = None
+    due_date: datetime | None = None
 
 
 class ResearchTaskResponse(ResearchTaskBase):
