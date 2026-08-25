@@ -34,7 +34,8 @@ from app.services.research_project import (
 
 from app.services.research_task import (
     get_research_task_by_id,
-    create_research_task
+    create_research_task,
+    get_research_tasks
 )
 
 
@@ -109,7 +110,7 @@ def update_project(
 @router.delete("/{project_id}")
 def delete_project(
     project_id: int,
-    current_user: User = Depends(get_current_user), #Lấy ra thông tin của user đang đăng nhập
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     return delete_research_project(
@@ -180,4 +181,20 @@ def create_task(
         project_id,
         current_user.id,
         task
+    )
+
+
+@router.get(
+    "/{project_id}/research-tasks",
+    response_model=list[ResearchTaskResponse]
+)
+def get_tasks(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return get_research_tasks(
+        db,
+        project_id,
+        current_user.id
     )

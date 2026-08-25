@@ -3,8 +3,6 @@ from datetime import datetime
 
 
 class ResearchTaskBase(BaseModel):
-
-    
     title: str
     description: str
     assignee_id: int
@@ -13,9 +11,10 @@ class ResearchTaskBase(BaseModel):
     due_date: datetime
 
 
-class ResearchTaskCreate(ResearchTaskBase):
+class ResearchTaskCreate(BaseModel):
     title: str
     description: str
+    assignee_id: int
     due_date: datetime
     priority: str
 
