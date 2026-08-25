@@ -27,10 +27,10 @@ def create_research_task(
         ResearchMember.user_id == user_id
     ).first()
 
-    if not member:
+    if project.owner_id != user_id and not member:
         raise HTTPException(
             status_code=403,
-            detail="Bạn không phải thành viên của đề tài"
+            detail="Bạn không có quyền tạo nhiệm vụ"
         )
 
     assignee = db.query(ResearchMember).filter(
@@ -89,10 +89,10 @@ def get_research_tasks(
         ResearchMember.user_id == user_id
     ).first()
 
-    if not member:
+    if project.owner_id != user_id and not member:
         raise HTTPException(
             status_code=403,
-            detail="Bạn không phải thành viên của đề tài"
+            detail="Bạn không thuộc đề tài nghiên cứu này"
         )
 
     if limit < 1 or limit > 100:
@@ -149,9 +149,13 @@ def get_research_tasks(
         sort_column = ResearchTask.due_date
 
     if sort_order == "asc":
-        query = query.order_by(sort_column.asc())
+        query = query.order_by(
+            sort_column.asc()
+        )
     else:
-        query = query.order_by(sort_column.desc())
+        query = query.order_by(
+            sort_column.desc()
+        )
 
     return query.offset(offset).limit(limit).all()
 
@@ -186,7 +190,7 @@ def get_research_task_by_id(
         ResearchMember.user_id == user_id
     ).first()
 
-    if not member:
+    if project.owner_id != user_id and not member:
         raise HTTPException(
             status_code=403,
             detail="Bạn không thuộc đề tài nghiên cứu này"
@@ -226,34 +230,37 @@ def update_research_task(
         ResearchMember.user_id == user_id
     ).first()
 
-    if not member:
-        raise HTTPException(
-            status_code=403,
-            detail="Bạn không thuộc đề tài nghiên cứu này"
-        )
-
     is_owner = project.owner_id == user_id
     is_assignee = task.assignee_id == user_id
 
     if not is_owner and not is_assignee:
-        raise HTTPException(
-            status_code=403,
-            detail="Chỉ owner hoặc assignee mới có quyền cập nhật nhiệm vụ"
-        )
-
-    data = task_data.model_dump(exclude_unset=True)
-
-    if "assignee_id" in data and data["assignee_id"] is not None:
-        assignee = db.query(ResearchMember).filter(
-            ResearchMember.project_id == task.project_id,
-            ResearchMember.user_id == data["assignee_id"]
-        ).first()
-
-        if not assignee:
+        if not member:
             raise HTTPException(
                 status_code=403,
-                detail="Người được giao phải là thành viên của đề tài"
+                detail="Bạn không thuộc đề tài nghiên cứu này"
             )
+
+        raise HTTPException(
+            status_code=403,
+            detail="Bạn không có quyền cập nhật nhiệm vụ"
+        )
+
+    data = task_data.model_dump(
+        exclude_unset=True
+    )
+
+    if "assignee_id" in data:
+        if data["assignee_id"] is not None:
+            assignee = db.query(ResearchMember).filter(
+                ResearchMember.project_id == task.project_id,
+                ResearchMember.user_id == data["assignee_id"]
+            ).first()
+
+            if not assignee:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Người được giao phải là thành viên của đề tài"
+                )
 
     for key, value in data.items():
         setattr(task, key, value)
@@ -287,17 +294,6 @@ def delete_research_task(
         raise HTTPException(
             status_code=404,
             detail="Không tìm thấy đề tài nghiên cứu"
-        )
-
-    member = db.query(ResearchMember).filter(
-        ResearchMember.project_id == task.project_id,
-        ResearchMember.user_id == user_id
-    ).first()
-
-    if not member:
-        raise HTTPException(
-            status_code=403,
-            detail="Bạn không thuộc đề tài nghiên cứu này"
         )
 
     if project.owner_id != user_id:
