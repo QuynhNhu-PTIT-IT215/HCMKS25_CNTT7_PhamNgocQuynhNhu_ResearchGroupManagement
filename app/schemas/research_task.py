@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import datetime
 
 
@@ -18,6 +18,13 @@ class ResearchTaskCreate(BaseModel):
     due_date: datetime
     priority: str
 
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, value):
+        if value not in ["LOW", "MEDIUM", "HIGH"]:
+            raise ValueError("Priority phải là LOW, MEDIUM hoặc HIGH")
+        return value
+
 
 class ResearchTaskUpdate(BaseModel):
     title: str | None = None
@@ -26,6 +33,20 @@ class ResearchTaskUpdate(BaseModel):
     status: str | None = None
     priority: str | None = None
     due_date: datetime | None = None
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, value):
+        if value not in ["TODO", "IN_PROGRESS", "DONE"]:
+            raise ValueError("Status phải là TODO, IN_PROGRESS hoặc DONE")
+        return value
+
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, value):
+        if value not in ["LOW", "MEDIUM", "HIGH"]:
+            raise ValueError("Priority phải là LOW, MEDIUM hoặc HIGH")
+        return value
 
 
 class ResearchTaskResponse(ResearchTaskBase):
