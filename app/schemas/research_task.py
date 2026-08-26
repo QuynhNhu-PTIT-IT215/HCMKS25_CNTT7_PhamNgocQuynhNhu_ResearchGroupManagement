@@ -5,7 +5,7 @@ from datetime import datetime
 class ResearchTaskBase(BaseModel):
     title: str
     description: str
-    assignee_id: int
+    assignee_id: int | None = None
     status: str
     priority: str
     due_date: datetime
@@ -32,7 +32,7 @@ class ResearchTaskBase(BaseModel):
 class ResearchTaskCreate(BaseModel):
     title: str
     description: str
-    assignee_id: int
+    assignee_id: int | None = None
     due_date: datetime
     priority: str
 

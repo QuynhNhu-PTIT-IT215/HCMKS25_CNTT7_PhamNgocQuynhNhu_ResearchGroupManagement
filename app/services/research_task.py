@@ -49,7 +49,6 @@ def create_research_task(
         project_id=project_id,
         title=task.title,
         description=task.description,
-        assignee_id=task.assignee_id,
         due_date=task.due_date,
         priority=task.priority,
         status="TODO"
