@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.routers import users
 from app.routers import research_project, research_task
@@ -25,6 +26,7 @@ app.include_router(research_task.router)
 app.include_router(research_project.router)
 app.include_router(auth.router)
 
+
 @app.get("/health")
 def health_check():
     return {
@@ -32,12 +34,12 @@ def health_check():
         "message": "Server đang hoạt động"
     }
 
-#xem lại cái này
-# Để lỗi bung ra đúng với cá trường trong def http_exception_handler() thì 
-# khi: raise HTTPException(...) thì nó sẽ chạy cái hàm def đó.
-# Nên bên raise chỉ cần thay đổi status_code và detail.
+
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request,exc: HTTPException):
+async def http_exception_handler(
+    request: Request,
+    exc: HTTPException
+):
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -49,12 +51,45 @@ async def http_exception_handler(request: Request,exc: HTTPException):
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request,exc: RequestValidationError):
+async def validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError
+):
     return JSONResponse(
         status_code=422,
         content={
             "success": False,
             "status_code": 422,
             "message": "Dữ liệu đầu vào không hợp lệ"
+        }
+    )
+
+
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(
+    request: Request,
+    exc: IntegrityError
+):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "success": False,
+            "status_code": 400,
+            "message": "Dữ liệu không hợp lệ hoặc bị trùng"
+        }
+    )
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_error_handler(
+    request: Request,
+    exc: SQLAlchemyError
+):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "success": False,
+            "status_code": 400,
+            "message": "Không thể xử lý dữ liệu trong cơ sở dữ liệu"
         }
     )

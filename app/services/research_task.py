@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.schemas.research_task import ResearchTaskCreate, ResearchTaskUpdate
 from app.models.research_project import ResearchProject, ResearchMember
@@ -54,9 +55,16 @@ def create_research_task(
         status="TODO"
     )
 
-    db.add(research_task)
-    db.commit()
-    db.refresh(research_task)
+    try:
+        db.add(research_task)
+        db.commit()
+        db.refresh(research_task)
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Không thể tạo nhiệm vụ nghiên cứu"
+        )
 
     return research_task
 
@@ -265,8 +273,15 @@ def update_research_task(
     for key, value in data.items():
         setattr(task, key, value)
 
-    db.commit()
-    db.refresh(task)
+    try:
+        db.commit()
+        db.refresh(task)
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Không thể cập nhật nhiệm vụ nghiên cứu"
+        )
 
     return task
 
@@ -302,8 +317,15 @@ def delete_research_task(
             detail="Chỉ chủ đề tài mới có quyền xóa nhiệm vụ"
         )
 
-    db.delete(task)
-    db.commit()
+    try:
+        db.delete(task)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Không thể xóa nhiệm vụ nghiên cứu"
+        )
 
     return {
         "message": "Xóa nhiệm vụ nghiên cứu thành công"

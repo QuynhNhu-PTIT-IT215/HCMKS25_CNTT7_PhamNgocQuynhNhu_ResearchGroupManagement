@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -43,7 +43,10 @@ router = APIRouter(
 
 @router.post(
     "",
-    response_model=ResearchProjectResponse
+    response_model=ResearchProjectResponse,
+    status_code=201,
+    summary="Tạo đề tài nghiên cứu",
+    description="User đăng nhập tạo một đề tài nghiên cứu mới và trở thành Owner."
 )
 def create_project(
     project: ResearchProjectCreate,
@@ -58,9 +61,16 @@ def create_project(
     )
 
 
-@router.get("")
+@router.get(
+    "",
+    summary="Lấy danh sách đề tài nghiên cứu",
+    description="Lấy các đề tài mà user hiện tại là Owner hoặc Member. Có thể tìm kiếm theo tên."
+)
 def get_projects(
-    search: str,
+    search: str = Query(
+        None,
+        description="Từ khóa tìm kiếm theo tên đề tài"
+    ),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -71,7 +81,12 @@ def get_projects(
     )
 
 
-@router.get("/{project_id}")
+@router.get(
+    "/{project_id}",
+    response_model=ResearchProjectResponse,
+    summary="Lấy đề tài nghiên cứu theo ID",
+    description="Chỉ Owner hoặc Member của đề tài mới được xem thông tin."
+)
 def get_project(
     project_id: int,
     current_user: User = Depends(get_current_user),
@@ -86,7 +101,9 @@ def get_project(
 
 @router.put(
     "/{project_id}",
-    response_model=ResearchProjectResponse
+    response_model=ResearchProjectResponse,
+    summary="Cập nhật đề tài nghiên cứu",
+    description="Chỉ Owner của đề tài mới được cập nhật."
 )
 def update_project(
     project_id: int,
@@ -103,7 +120,12 @@ def update_project(
     )
 
 
-@router.delete("/{project_id}")
+@router.delete(
+    "/{project_id}",
+    status_code=200,
+    summary="Xóa đề tài nghiên cứu",
+    description="Chỉ Owner của đề tài mới được xóa."
+)
 def delete_project(
     project_id: int,
     current_user: User = Depends(get_current_user),
@@ -116,7 +138,13 @@ def delete_project(
     )
 
 
-@router.post("/{project_id}/members")
+@router.post(
+    "/{project_id}/members",
+    response_model=ResearchMemberResponse,
+    status_code=201,
+    summary="Thêm thành viên",
+    description="Owner thêm một user vào đề tài nghiên cứu."
+)
 def add_member(
     project_id: int,
     member: ResearchMemberCreate,
@@ -131,7 +159,12 @@ def add_member(
     )
 
 
-@router.delete("/{project_id}/members/{user_id}")
+@router.delete(
+    "/{project_id}/members/{user_id}",
+    status_code=200,
+    summary="Xóa thành viên",
+    description="Owner xóa một thành viên khỏi đề tài nghiên cứu."
+)
 def delete_member(
     project_id: int,
     user_id: int,
@@ -148,7 +181,9 @@ def delete_member(
 
 @router.get(
     "/{project_id}/members",
-    response_model=list[ResearchMemberResponse]
+    response_model=list[ResearchMemberResponse],
+    summary="Lấy danh sách thành viên",
+    description="Lấy danh sách thành viên và role của từng thành viên trong đề tài."
 )
 def get_members(
     project_id: int,
@@ -164,7 +199,10 @@ def get_members(
 
 @router.post(
     "/{project_id}/research-tasks",
-    response_model=ResearchTaskResponse
+    response_model=ResearchTaskResponse,
+    status_code=201,
+    summary="Tạo nhiệm vụ nghiên cứu",
+    description="Thành viên của đề tài có thể tạo nhiệm vụ nghiên cứu."
 )
 def create_task(
     project_id: int,
@@ -182,18 +220,47 @@ def create_task(
 
 @router.get(
     "/{project_id}/research-tasks",
-    response_model=list[ResearchTaskResponse]
+    response_model=list[ResearchTaskResponse],
+    summary="Lấy danh sách nhiệm vụ nghiên cứu",
+    description="Lấy các nhiệm vụ thuộc đề tài mà user hiện tại có quyền truy cập."
 )
 def get_tasks(
     project_id: int,
-    status: str | None = None,
-    priority: str | None = None,
-    assignee_id: int | None = None,
-    search: str | None = None,
-    limit: int = 10,
-    offset: int = 0,
-    sort_by: str = "created_at",
-    sort_order: str = "desc",
+    status: str = Query(
+        None,
+        description="Lọc theo status: TODO, IN_PROGRESS, DONE"
+    ),
+    priority: str = Query(
+        None,
+        description="Lọc theo priority: LOW, MEDIUM, HIGH"
+    ),
+    assignee_id: int = Query(
+        None,
+        description="Lọc theo người được giao"
+    ),
+    search: str = Query(
+        None,
+        description="Tìm kiếm theo title"
+    ),
+    limit: int = Query(
+        10,
+        ge=1,
+        le=100,
+        description="Số lượng nhiệm vụ trả về"
+    ),
+    offset: int = Query(
+        0,
+        ge=0,
+        description="Số lượng nhiệm vụ bỏ qua"
+    ),
+    sort_by: str = Query(
+        "created_at",
+        description="Sắp xếp theo created_at hoặc due_date"
+    ),
+    sort_order: str = Query(
+        "desc",
+        description="Thứ tự sắp xếp: asc hoặc desc"
+    ),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
