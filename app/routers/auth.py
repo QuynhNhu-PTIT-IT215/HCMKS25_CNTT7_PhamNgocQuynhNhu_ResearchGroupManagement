@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.schemas.auth import (
-    UserCreate,
     UserLogin,
     TokenResponse,
     RefreshTokenRequest
 )
+from app.schemas.user import UserCreate
 from app.services.auth import (
     register_user,
     login_user,

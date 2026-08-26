@@ -224,43 +224,15 @@ def create_task(
     summary="Lấy danh sách nhiệm vụ nghiên cứu",
     description="Lấy các nhiệm vụ thuộc đề tài mà user hiện tại có quyền truy cập."
 )
-def get_tasks(
-    project_id: int,
-    status: str = Query(
-        None,
-        description="Lọc theo status: TODO, IN_PROGRESS, DONE"
-    ),
-    priority: str = Query(
-        None,
-        description="Lọc theo priority: LOW, MEDIUM, HIGH"
-    ),
-    assignee_id: int = Query(
-        None,
-        description="Lọc theo người được giao"
-    ),
-    search: str = Query(
-        None,
-        description="Tìm kiếm theo title"
-    ),
-    limit: int = Query(
-        10,
-        ge=1,
-        le=100,
-        description="Số lượng nhiệm vụ trả về"
-    ),
-    offset: int = Query(
-        0,
-        ge=0,
-        description="Số lượng nhiệm vụ bỏ qua"
-    ),
-    sort_by: str = Query(
-        "created_at",
-        description="Sắp xếp theo created_at hoặc due_date"
-    ),
-    sort_order: str = Query(
-        "desc",
-        description="Thứ tự sắp xếp: asc hoặc desc"
-    ),
+def get_tasks(project_id: int,
+    status: str = Query(None,description="Lọc theo status: TODO, IN_PROGRESS, DONE"),
+    priority: str = Query(None,description="Lọc theo priority: LOW, MEDIUM, HIGH"),
+    assignee_id: int = Query(None,description="Lọc theo người được giao"),
+    search: str = Query(None,description="Tìm kiếm theo title"),
+    limit: int = Query(10,ge=1,le=100,description="Số lượng nhiệm vụ trả về"),
+    offset: int = Query(0,ge=0,description="Số lượng nhiệm vụ bỏ qua"),
+    sort_by: str = Query("created_at",description="Sắp xếp theo created_at hoặc due_date"),
+    sort_order: str = Query("desc",description="Thứ tự sắp xếp: asc hoặc desc"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
