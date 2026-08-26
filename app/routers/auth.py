@@ -1,18 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
+
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
+
 from app.schemas.auth import (
     UserLogin,
     TokenResponse,
     RefreshTokenRequest
 )
+
 from app.schemas.user import UserCreate
+
 from app.services.auth import (
     register_user,
     login_user,
     refresh_access_token
 )
+
 
 router = APIRouter(
     prefix="/auth",
@@ -31,7 +37,13 @@ def register(
     user: UserCreate,
     db: Session = Depends(get_db)
 ):
-    return register_user(db, user)
+
+    return register_user(
+        db,
+        user.email,
+        user.full_name,
+        user.password
+    )
 
 
 @router.post(
@@ -44,7 +56,30 @@ def login(
     user: UserLogin,
     db: Session = Depends(get_db)
 ):
-    return login_user(db, user)
+
+    return login_user(
+        db,
+        user.email,
+        user.password
+    )
+
+
+@router.post(
+    "/token",
+    response_model=TokenResponse,
+    summary="Đăng nhập Swagger",
+    description="Đăng nhập bằng form để Swagger Authorize nhận JWT."
+)
+def token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+
+    return login_user(
+        db,
+        form_data.username,
+        form_data.password
+    )
 
 
 @router.post(
@@ -57,6 +92,7 @@ def refresh(
     data: RefreshTokenRequest,
     db: Session = Depends(get_db)
 ):
+
     return refresh_access_token(
         db,
         data.refresh_token
